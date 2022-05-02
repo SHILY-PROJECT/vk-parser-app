@@ -5,6 +5,7 @@ public class VkParams
     private VkParams() { }
 
     public string Uuid { get; set; } = string.Empty;
+    public string AccessToken { get; set; } = string.Empty;
     public string AuthToken { get; set; } = string.Empty;
     public string AnonymousToken { get; set; } = string.Empty;
     public string DeviceId { get; set; } = string.Empty;

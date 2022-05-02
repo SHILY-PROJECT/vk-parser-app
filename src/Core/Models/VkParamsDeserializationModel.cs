@@ -2,6 +2,9 @@
 
 public class VkParamsDeserializationModel
 {
+    [JsonPropertyName("access_token")]
+    public string AccessToken { get; set; } = string.Empty;
+
     [JsonPropertyName("auth_token")]
     public string AuthToken { get; set; } = string.Empty;
 
