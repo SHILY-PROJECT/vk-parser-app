@@ -1,4 +1,4 @@
-﻿namespace VkParser.Core.Models;
+﻿namespace VkParser.WebRequests.Models;
 
 public class VkParams
 {

@@ -1,4 +1,4 @@
-﻿namespace VkParser.Core.Toolkit;
+﻿namespace VkParser.WebRequests.Toolkit;
 
 public class TextMacros
 {

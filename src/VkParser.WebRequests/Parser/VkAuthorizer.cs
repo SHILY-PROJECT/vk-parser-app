@@ -1,44 +1,51 @@
-﻿namespace VkParser.Core.Parser;
+﻿namespace VkParser.WebRequests.Parser;
 
 public class VkAuthorizer : IAuthorizer
 {
-    private int _counter = 0;
-
     private readonly HttpClient _client;
-    private readonly UserDataModel _userData;
+    private readonly IUser _userData;
     private readonly VkParams _vkParams;
 
-    public VkAuthorizer(HttpClient client, UserDataModel userData, VkParams vkParams)
+    private readonly Dictionary<string, string> _headersForApiVk = new()
+    {
+        { "Referer", "https://id.vk.com/" },
+        { "Origin", "https://id.vk.com" },
+        { "Connection", "keep-alive" }
+    };
+
+    private int _counter = 0;
+
+    public VkAuthorizer(HttpClient client, IUser userData, VkParams vkParams)
     {
         _client = client;
         _userData = userData;
         _vkParams = vkParams;
     }
 
-    public async Task<bool> SignIn()
+    public async Task<bool> SignInAsync()
     {
         if (++_counter > 2) return false;
 
-        if (await VerifyCurrentStateOfAuthenticationAndCollectCookies()) return true;
-        if (!await CollectTokensForSignIn()) return false;
-        if (!await RegisterEventSignIn()) return false;
-        if (!await ValidateLogin()) return false;
-        if (!await RequestAuthorization()) return false;
+        if (await VerifyCurrentStateOfAuthenticationAndCollectCookiesAsync()) return true;
+        if (!await CollectTokensForSignInAsync()) return false;
+        if (!await RegisterEventSignInAsync()) return false;
+        if (!await ValidateLoginAsync()) return false;
+        if (!await RequestAuthorizationAsync()) return false;
 
-        return await SignIn();
+        return await SignInAsync();
     }
 
-    private async Task<bool> VerifyCurrentStateOfAuthenticationAndCollectCookies()
+    private async Task<bool> VerifyCurrentStateOfAuthenticationAndCollectCookiesAsync()
     {
         var request = new HttpRequestMessage
         {
             Method = HttpMethod.Get,
             RequestUri = new Uri("https://vk.com/")
         };
-        return Regex.IsMatch(await _client.HttpRequest(request), "(?<=\"user_id\":).*?(?=,)");
+        return Regex.IsMatch(await _client.HttpRequestAsync(request), "(?<=\"user_id\":).*?(?=,)");
     }
 
-    private async Task<bool> CollectTokensForSignIn()
+    private async Task<bool> CollectTokensForSignInAsync()
     {
         var request = new HttpRequestMessage
         {
@@ -53,12 +60,12 @@ public class VkAuthorizer : IAuthorizer
             }
             .ToParamsHttp())
         };
-        request.Headers.AddOrReplace(new() { { "Referer", "https://vk.com/" }, { "Connection", "keep-alive" } });
+        request.Headers.AddRangeOrReplace(new() { { "Referer", "https://vk.com/" }, { "Connection", "keep-alive" } });
 
-        return VkParamsHandler.TryExtractTokensFromHtml(_vkParams, await _client.HttpRequest(request));
+        return _vkParams.TryExtractTokensFromHtml(await _client.HttpRequestAsync(request));
     }
 
-    private async Task<bool> RegisterEventSignIn()
+    private async Task<bool> RegisterEventSignInAsync()
     {
         var eventId = new Random().Next(500000, 7000000);
 
@@ -80,18 +87,12 @@ public class VkAuthorizer : IAuthorizer
             }
             .ToParamsHttp())
         };
-        request.Headers.AddOrReplace(new()
-        {
-            { "Referer", "https://id.vk.com/" },
-            { "Origin", "https://id.vk.com" },
-            { "Connection", "keep-alive" }
-        });
-        request.Content.Headers.ContentType = new MediaTypeHeaderValue("application/x-www-form-urlencoded");
-
+        request.Headers.AddRangeOrReplace(_headersForApiVk);
+        request.Content.Headers.ContentType = new("application/x-www-form-urlencoded");
 
         try
         {
-            return Regex.IsMatch(await _client.HttpRequest(request), "(?<=\"response\":)1.*?");
+            return Regex.IsMatch(await _client.HttpRequestAsync(request), "(?<=\"response\":)1.*?");
         }
         catch (Exception ex)
         {
@@ -101,7 +102,7 @@ public class VkAuthorizer : IAuthorizer
         return false;
     }
 
-    private async Task<bool> ValidateLogin()
+    private async Task<bool> ValidateLoginAsync()
     {
         var request = new HttpRequestMessage
         {
@@ -117,18 +118,13 @@ public class VkAuthorizer : IAuthorizer
             }
             .ToParamsHttp())
         };
-        request.Headers.AddOrReplace(new()
-        {
-            { "Referer", "https://id.vk.com/" },
-            { "Origin", "https://id.vk.com" },
-            { "Connection", "keep-alive" }
-        });
-        request.Content.Headers.ContentType = new MediaTypeHeaderValue("application/x-www-form-urlencoded");
+        request.Content.Headers.ContentType = new("application/x-www-form-urlencoded");
+        request.Headers.AddRangeOrReplace(_headersForApiVk);
 
-        return Regex.IsMatch(await _client.HttpRequest(request), "(?<=\"sid\":\").*?(?=\")");
+        return Regex.IsMatch(await _client.HttpRequestAsync(request), "(?<=\"sid\":\").*?(?=\")");
     }
 
-    private async Task<bool> RequestAuthorization()
+    private async Task<bool> RequestAuthorizationAsync()
     {
         var request = new HttpRequestMessage
         {
@@ -150,19 +146,14 @@ public class VkAuthorizer : IAuthorizer
             }
             .ToParamsHttp())
         };
-        request.Headers.AddOrReplace(new()
-        {
-            { "Referer", "https://id.vk.com/" },
-            { "Origin", "https://id.vk.com" },
-            { "Connection", "keep-alive" }
-        });
-        request.Content.Headers.ContentType = new MediaTypeHeaderValue("application/x-www-form-urlencoded");
+        request.Content.Headers.ContentType = new("application/x-www-form-urlencoded");
+        request.Headers.AddRangeOrReplace(_headersForApiVk);
 
         /*
          *  TODO: Add token extraction via 'VkParamsHandler.TryExtractTokensFromHtml'
          */
 
-        if (Regex.Match(await _client.HttpRequest(request), "(?<=\"access_token\":\").*?(?=\")").Value is string accessToken && !string.IsNullOrWhiteSpace(accessToken))
+        if (Regex.Match(await _client.HttpRequestAsync(request), "(?<=\"access_token\":\").*?(?=\")").Value is string accessToken && !string.IsNullOrWhiteSpace(accessToken))
         {
             _vkParams.AccessToken = accessToken;
             return true;

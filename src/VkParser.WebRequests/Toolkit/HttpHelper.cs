@@ -1,18 +1,18 @@
-﻿namespace VkParser.Core.Toolkit;
+﻿namespace VkParser.WebRequests.Toolkit;
 
 public static class HttpHelper
 {
-    public static void Add(this HttpRequestHeaders requestHeaders, Dictionary<string, string> addHeaders)
+    public static void AddRange(this HttpRequestHeaders requestHeaders, Dictionary<string, string> header)
     {
-        foreach (var kv in addHeaders)
+        foreach (var kv in header)
         {
             requestHeaders.Add(kv.Key, kv.Value);
         }
     }
 
-    public static void AddOrReplace(this HttpRequestHeaders requestHeaders, Dictionary<string, string> addHeaders)
+    public static void AddRangeOrReplace(this HttpRequestHeaders requestHeaders, Dictionary<string, string> headers)
     {
-        foreach (var kv in addHeaders)
+        foreach (var kv in headers)
         {
             if (requestHeaders.Contains(kv.Key)) requestHeaders.Remove(kv.Key);
             requestHeaders.Add(kv.Key, kv.Value);
@@ -25,11 +25,10 @@ public static class HttpHelper
         requestHeaders.Add(name, value);
     }
 
-    public static async Task<string> HttpRequest(this HttpClient client, HttpRequestMessage httpRequest)
+    public static async Task<string> HttpRequestAsync(this HttpClient client, HttpRequestMessage httpRequest)
     {
         var resp = await client.SendAsync(httpRequest);
         using var streamReader = new StreamReader(await resp.Content.ReadAsStreamAsync(), Encoding.GetEncoding("iso-8859-1"));
         return await streamReader.ReadToEndAsync();
     }
-    
 }
