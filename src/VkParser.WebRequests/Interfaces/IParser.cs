@@ -2,5 +2,5 @@
 
 public interface IParser
 {
-
+    Task<IEnumerable<IUser>> ParseUsersAsync(IFilterOptions filter);
 }
