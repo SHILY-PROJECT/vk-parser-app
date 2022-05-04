@@ -3,7 +3,7 @@
 public class VkAuthorizer : IAuthorizer
 {
     private readonly HttpClient _client;
-    private readonly IUser _userData;
+    private readonly IAccount _account;
     private readonly VkParams _vkParams;
 
     private readonly Dictionary<string, string> _headersForApiVk = new()
@@ -15,10 +15,10 @@ public class VkAuthorizer : IAuthorizer
 
     private int _counter = 0;
 
-    public VkAuthorizer(HttpClient client, IUser userData, VkParams vkParams)
+    public VkAuthorizer(HttpClient client, IAccount account, VkParams vkParams)
     {
         _client = client;
-        _userData = userData;
+        _account = account;
         _vkParams = vkParams;
     }
 
@@ -110,7 +110,7 @@ public class VkAuthorizer : IAuthorizer
             RequestUri = new Uri($"https://api.vk.com/method/auth.validateAccount?v=5.174&client_id=7913379"),
             Content = new StringContent(new Dictionary<string, string>
             {
-                { "login", _userData.Login },
+                { "login", _account.Login },
                 { "sid", "" },
                 { "client_id", "7913379" },
                 { "auth_token", _vkParams.AuthToken },
@@ -132,8 +132,8 @@ public class VkAuthorizer : IAuthorizer
             RequestUri = new Uri($"https://login.vk.com/?act=connect_authorize"),
             Content = new StringContent(new Dictionary<string, string>
             {
-                { "username", _userData.Login },
-                { "password", HttpUtility.UrlEncode(_userData.Password) },
+                { "username", _account.Login },
+                { "password", HttpUtility.UrlEncode(_account.Password) },
                 { "auth_token", _vkParams.AuthToken },
                 { "sid", "" },
                 { "uuid", _vkParams.Uuid },

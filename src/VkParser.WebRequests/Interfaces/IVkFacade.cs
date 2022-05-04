@@ -2,6 +2,6 @@
 
 public interface IVkFacade
 {
-    Task<bool> Auth();
-    Task<IEnumerable<IPerson>> ParsePersonsByUrl(Uri url);
+    Task<bool> SignInAsync();
+    Task<IEnumerable<IUser>> ParseUsersAsync(IFilterOptions filter);
 }

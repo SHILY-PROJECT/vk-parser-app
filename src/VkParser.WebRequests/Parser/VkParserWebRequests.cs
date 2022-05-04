@@ -9,9 +9,9 @@ public class VkParserWebRequests : IParser
         _client = client;
     }
 
-    public async Task<IEnumerable<IUser>> ParseUsersAsync(IParsingOptions options)
+    public async Task<IEnumerable<IUser>> ParseUsersAsync(IFilterOptions filter)
     {
-        var request = new HttpRequestMessage(HttpMethod.Get, options.Url);
+        var request = new HttpRequestMessage(HttpMethod.Get, filter.Url);
         var response = await _client.SendAsync(request);
 
         throw new NotImplementedException();
