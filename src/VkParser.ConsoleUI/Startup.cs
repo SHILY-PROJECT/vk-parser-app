@@ -11,10 +11,10 @@ internal class Startup
         _vk = vk;
     }
 
-    public static void Main() =>
-        CreateHostBuilder().Build().Services.GetRequiredService<Startup>().Run();
+    public static async Task Main() =>
+        await CreateHostBuilder().Build().Services.GetRequiredService<Startup>().Run();
 
-    public async void Run()
+    public async Task Run()
     {
         var loginPass = File.ReadAllLines(@"F:\SHILY PROJECT\Projects\vk\sec.txt", Encoding.UTF8);
         var acc = _services.GetRequiredService<IAccount>();
