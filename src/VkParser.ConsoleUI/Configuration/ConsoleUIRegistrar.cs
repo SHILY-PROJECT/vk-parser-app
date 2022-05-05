@@ -10,7 +10,7 @@ public static class ConsoleUIRegistrar
         services
             .AddSingleton<Startup>()
             .AddSingleton<IAccount, AccountDataModel>()
-            .AddVkParserComponents();
+            .AddVkParserWebRequestsComponents();
 
         return services;
     }
