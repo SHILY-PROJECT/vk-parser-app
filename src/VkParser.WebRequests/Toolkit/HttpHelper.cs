@@ -25,6 +25,13 @@ public static class HttpHelper
         requestHeaders.Add(name, value);
     }
 
+    public static HttpClient CreateHttpClient(IHttpClientConfiguration httpClientConfiguration)
+    {
+        var client = new HttpClient(httpClientConfiguration.HttpClientHandler, false);
+        client.DefaultRequestHeaders.AddRange(httpClientConfiguration.DefaultHeaders);
+        return client;
+    }
+
     public static async Task<string> HttpRequestAsync(this HttpClient client, HttpRequestMessage httpRequest)
     {
         var resp = await client.SendAsync(httpRequest);
