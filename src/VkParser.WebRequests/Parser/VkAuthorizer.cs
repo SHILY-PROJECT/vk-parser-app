@@ -2,9 +2,9 @@
 
 public class VkAuthorizer : IAuthorizer
 {
-    private readonly HttpClient _client;
     private readonly IAccount _account;
     private readonly VkParams _vkParams;
+    private readonly HttpClient _client;
 
     private readonly Dictionary<string, string> _headersForApiVk = new()
     {
@@ -13,36 +13,35 @@ public class VkAuthorizer : IAuthorizer
         { "Connection", "keep-alive" }
     };
 
-    private int _counter = 0;
-
-    public VkAuthorizer(HttpClient client, IAccount account, VkParams vkParams)
+    public VkAuthorizer(IHttpClientConfiguration httpClientConfiguration, IAccount account, VkParams vkParams)
     {
-        _client = client;
+        _client = HttpHelper.CreateHttpClient(httpClientConfiguration);
         _account = account;
         _vkParams = vkParams;
     }
 
     public async Task<bool> SignInAsync()
     {
-        if (++_counter > 2) return false;
+        //using var client = HttpHelper.CreateHttpClient(_httpClientConfiguration);
 
-        if (await VerifyCurrentStateOfAuthenticationAndCollectCookiesAsync()) return true;
+        if (await VerifyAuthorizationStatusAsync()) return true;
         if (!await CollectTokensForSignInAsync()) return false;
         if (!await RegisterEventSignInAsync()) return false;
         if (!await ValidateLoginAsync()) return false;
         if (!await RequestAuthorizationAsync()) return false;
 
-        return await SignInAsync();
+        return await VerifyAuthorizationStatusAsync();
     }
 
-    private async Task<bool> VerifyCurrentStateOfAuthenticationAndCollectCookiesAsync()
+    private async Task<bool> VerifyAuthorizationStatusAsync()
     {
         var request = new HttpRequestMessage
         {
             Method = HttpMethod.Get,
             RequestUri = new Uri("https://vk.com/")
         };
-        return Regex.IsMatch(await _client.HttpRequestAsync(request), "(?<=\"user_id\":).*?(?=,)");
+        var response = await _client.HttpRequestAsync(request);
+        return Regex.IsMatch(response, "(?<=\"user_id\":).*?(?=,)");
     }
 
     private async Task<bool> CollectTokensForSignInAsync()

@@ -2,17 +2,18 @@
 
 public class VkParserWebRequests : IParser
 {
-    private HttpClient _client;
+    private readonly IHttpClientConfiguration _httpClientConfiguration;
 
-    public VkParserWebRequests(HttpClient client)
+    public VkParserWebRequests(IHttpClientConfiguration httpClientConfiguration)
     {
-        _client = client;
+        _httpClientConfiguration = httpClientConfiguration;
     }
 
     public async Task<IEnumerable<IUser>> ParseUsersAsync(IFilterOptions filter)
     {
+        using var client = HttpHelper.CreateHttpClient(_httpClientConfiguration);
         var request = new HttpRequestMessage(HttpMethod.Get, filter.Url);
-        var response = await _client.SendAsync(request);
+        var response = await client.SendAsync(request);
 
         throw new NotImplementedException();
     }
